@@ -18,28 +18,29 @@ exports.create = (req, res) => {
     v.check().then((matched) => {
         if (!matched) {
             res.status(422).send({errors : v.errors});
-        }
-
-        const attributes = req.body;
-        //check input 'slug' require and convert to setSlug
-        if(!attributes.slug){
-            attributes.slug = helpers.text.setSlug(attributes.title);
         }else{
-            attributes.slug = helpers.text.setSlug(attributes.slug);
-        }
 
-        // insert to database
-        Category.create(attributes)
-            .then(data => {
-                res.send({
-                    result: data
+            const attributes = req.body;
+            //check input 'slug' require and convert to setSlug
+            if(!attributes.slug){
+                attributes.slug = helpers.text.setSlug(attributes.title);
+            }else{
+                attributes.slug = helpers.text.setSlug(attributes.slug);
+            }
+
+            // insert to database
+            Category.create(attributes)
+                .then(data => {
+                    res.send({
+                        result: data
+                    });
+                })
+                .catch(err => {
+                    res.status(500).send({
+                        message: err.message || "Some error occurred while creating the Book."
+                    });
                 });
-            })
-            .catch(err => {
-                res.status(500).send({
-                    message: err.message || "Some error occurred while creating the Book."
-                });
-            });
+        }
     });
 };
 
@@ -57,37 +58,38 @@ exports.update = (req, res) => {
     v.check().then((matched) => {
         if (!matched) {
             res.status(422).send({errors : v.errors});
-        }
-
-        const attributes = req.body;
-        //check input 'slug' require and convert to setSlug
-        if(!attributes.slug){
-            attributes.slug = helpers.text.setSlug(attributes.title);
         }else{
-            attributes.slug = helpers.text.setSlug(attributes.slug);
-        }
 
-        // update to database
-        const id = req.params.id;
-        Category.update(attributes, {
-            where: { id: id }
-        })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    result: num
-                });
-            } else {
-                res.send({
-                    message: `Cannot update Book with id=${id}. Maybe Book was not found or req.body is empty!`
-                });
+            const attributes = req.body;
+            //check input 'slug' require and convert to setSlug
+            if(!attributes.slug){
+                attributes.slug = helpers.text.setSlug(attributes.title);
+            }else{
+                attributes.slug = helpers.text.setSlug(attributes.slug);
             }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error updating Book with id=" + id
-            });
-        });        
+
+            // update to database
+            const id = req.params.id;
+            Category.update(attributes, {
+                where: { id: id }
+            })
+            .then(num => {
+                if (num == 1) {
+                    res.send({
+                        result: num
+                    });
+                } else {
+                    res.send({
+                        message: `Cannot update Book with id=${id}. Maybe Book was not found or req.body is empty!`
+                    });
+                }
+            })
+            .catch(err => {
+                res.status(500).send({
+                    message: "Error updating Book with id=" + id
+                });
+            });  
+        }      
     });
 };
 
