@@ -75,9 +75,12 @@ exports.update = (req, res) => {
             })
             .then(num => {
                 if (num == 1) {
-                    res.send({
-                        result: num
+                    Category.findByPk(id).then((data) => {
+                        res.send({
+                            result: data
+                        });
                     });
+                    
                 } else {
                     res.send({
                         message: `Cannot update Book with id=${id}. Maybe Book was not found or req.body is empty!`
