@@ -1,5 +1,6 @@
 module.exports = app => {
     const categoryController = require("../controllers/category.controller.js");  
+    const config = require("../config/config.js");
     const router = require("express").Router();
   
     // Create a new category
@@ -14,5 +15,5 @@ module.exports = app => {
     // Selete a category
     router.get("/:id", categoryController.findOne);
   
-    app.use("/api/category", router);
+    app.use("/"+ config.base_host_api +"/category", router);
   };

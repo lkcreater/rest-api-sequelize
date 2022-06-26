@@ -34,6 +34,7 @@ require("./app/routes/book.routes")(app);
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
 require("./app/routes/category.routes")(app);
+require("./app/routes/post.routes")(app);
 
 // set port, listen for requests
 const PORT = config.PORT;

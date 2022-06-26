@@ -22,7 +22,10 @@ const configEnv = {
   /** AUTH KEY */
   auth: {
     secret: "our-secret-key"
-  }
+  },
+
+  /** HOST API */
+  base_host_api: '' 
 };
 
 /***** local *****/
@@ -50,7 +53,10 @@ const configLocal = {
   /** AUTH KEY */
   auth: {
     secret: "our-secret-key"
-  }
+  },
+
+  /** HOST API */
+  base_host_api: 'api' 
 };
 
 module.exports = configLocal;

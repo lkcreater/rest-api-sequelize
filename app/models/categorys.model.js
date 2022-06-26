@@ -8,6 +8,11 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
                 autoIncrement: true,
                 primaryKey: true
             },
+            parent_id:{
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                defaultValue: 0
+            },
             title: {
                 type: DataTypes.STRING,   
                 allowNull: false,             
@@ -39,6 +44,10 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
             updatedAt: "updated_at"
         }
     );
+
+    Categorys.prototype.testMethod = function () {
+        console.log(this);
+      };
 
     return Categorys;
 };

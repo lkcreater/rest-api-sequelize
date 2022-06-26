@@ -37,7 +37,7 @@ exports.create = (req, res) => {
                 })
                 .catch(err => {
                     res.status(500).send({
-                        message: err.message || "Some error occurred while creating the Book."
+                        message: err.message || "Some error occurred while creating the item."
                     });
                 });
         }
@@ -79,17 +79,16 @@ exports.update = (req, res) => {
                         res.send({
                             result: data
                         });
-                    });
-                    
+                    });                    
                 } else {
                     res.send({
-                        message: `Cannot update Book with id=${id}. Maybe Book was not found or req.body is empty!`
+                        message: `Cannot update id=${id}. Maybe Item was not found or req.body is empty!`
                     });
                 }
             })
             .catch(err => {
                 res.status(500).send({
-                    message: "Error updating Book with id=" + id
+                    message: "Error updating with id=" + id
                 });
             });  
         }      
@@ -111,7 +110,7 @@ exports.findAll = (req, res) => {
     })
     .catch(err => {
         res.send(500).send({
-            message: err.message || "Some error accurred while retrieving books."
+            message: err.message || "Some error accurred while retrieving item."
         });
     });
 };
@@ -131,7 +130,7 @@ exports.findOne = (req, res) => {
     })
     .catch(err => {
         res.status(500).send({
-            message: `Error retrieving Book with id = ${id}`
+            message: `Error retrieving item with id = ${id}`
         });
     });
 };
