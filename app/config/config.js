@@ -37,8 +37,9 @@ const configLocal = {
   db: {
     DB_HOST: 'localhost',
     DB_USER: 'root',
-    DB_PASS: '',
+    DB_PASS: 'root',
     DB_NAME: 'db_node_rest_api',
+    DB_PORT: 8889,
     dialect: "mysql",
 
     // pool is optional, it will be used for Sequelize connection pool configuration

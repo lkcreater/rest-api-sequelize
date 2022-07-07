@@ -8,9 +8,37 @@ const Op = db.Op;
 //***********************************************************/
 // controller create 
 //***********************************************************/
-exports.create = (req, res) => {
+exports.create = (req, res) => {      
 
+    const upload = helpers.file.upload.array('file');
+
+    upload(req, res, function (err) {
+        console.log(req.file);
+        if (err instanceof helpers.file.multer.MulterError) {
+          // A Multer error occurred when uploading.
+            console.log('error 1', err);
+        } else if (err) {
+            console.log('error 2', err);
+          // An unknown error occurred when uploading.
+        }
+
+        console.log(req.body);
+        console.log('uploaded...');
+        // Everything went fine.
+    });
+
+    
+    res.send({
+        result: '6666'
+    });
+
+    //let input = req.body.title;
+    //console.log(req);
+    // res.send({
+    //     result: '555'
+    // });
     // validate input
+    /*
     const v = new Validator(req.body, {
         title: 'required'
     });
@@ -42,6 +70,7 @@ exports.create = (req, res) => {
                 });
         }
     });
+    */
 };
 
 //***********************************************************/

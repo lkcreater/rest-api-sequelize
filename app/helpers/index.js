@@ -1,5 +1,7 @@
 const textHelper = require("./textHelper");
+const upload = require("./multer");
 
 module.exports = {
-    text : textHelper
+    text : textHelper,
+    file : upload
 };

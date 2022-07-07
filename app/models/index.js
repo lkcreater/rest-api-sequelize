@@ -8,6 +8,7 @@ const sequelize = new Sequelize(
   {
     host: config.db.DB_HOST,
     dialect: config.db.dialect,
+    port: config.db.DB_PORT,
     operatorsAliases: false,
 
     poll: {
@@ -18,6 +19,16 @@ const sequelize = new Sequelize(
     }
   }
 );
+
+sequelize.authenticate().then(function () {
+
+  console.log('Connection successful');
+  //res.send("connected")
+})
+.catch(function(error) {
+  console.log("Error creating connection:", error);
+  //res.send(error)
+});
 
 const db = {};
 
