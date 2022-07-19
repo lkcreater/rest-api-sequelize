@@ -25,5 +25,10 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
         },
     );
 
+    termRelationship.enumType = {
+        post: 'POST',
+        cate: 'CATEGORY'
+    }
+
     return termRelationship;
 };

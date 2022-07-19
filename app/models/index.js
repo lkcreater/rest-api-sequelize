@@ -1,5 +1,6 @@
 const config = require("../config/config.js");
-const { Sequelize, DataTypes, Op } = require("sequelize");
+const helper = require("../helpers");
+const { Sequelize, DataTypes, Op, QueryTypes } = require("sequelize");
 
 const sequelize = new Sequelize(
   config.db.DB_NAME,
@@ -32,10 +33,14 @@ sequelize.authenticate().then(function () {
 
 const db = {};
 
+// register helper
+db.$helper = helper;
+
 db.Sequelize = Sequelize;
 db.Op = Op;
 db.sequelize = sequelize;
 
+// load all models 
 db.books = require("./book.model.js")(sequelize, Sequelize, DataTypes);
 db.user = require("./user.model.js")(sequelize, Sequelize, DataTypes);
 db.role = require("./role.model.js")(sequelize, Sequelize, DataTypes);
@@ -43,6 +48,12 @@ db.category = require("./categorys.model.js")(sequelize, Sequelize, DataTypes);
 db.post = require("./post.model.js")(sequelize, Sequelize, DataTypes);
 db.termRelationship = require("./termRelationship.model.js")(sequelize, Sequelize, DataTypes);
 
+// setup helper
+db.HLEP = require("./render/model.helper.js")(db, QueryTypes);
+// setup option
+db.OPTION = require("./render/model.option.js")(db, QueryTypes);
+
+// join model
 db.role.belongsToMany(db.user, {
   through: "user_roles",
   foreignKey: "role_id",

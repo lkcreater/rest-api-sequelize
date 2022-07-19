@@ -8,24 +8,39 @@ const Op = db.Op;
 //***********************************************************/
 // controller create 
 //***********************************************************/
-exports.create = (req, res) => {      
+exports.create = async (req, res) => {      
 
-    const upload = helpers.file.upload.array('file');
+    // const upload = helpers.file.upload.array('file');
 
-    upload(req, res, function (err) {
-        console.log(req.file);
-        if (err instanceof helpers.file.multer.MulterError) {
-          // A Multer error occurred when uploading.
-            console.log('error 1', err);
-        } else if (err) {
-            console.log('error 2', err);
-          // An unknown error occurred when uploading.
-        }
+    // upload(req, res, function (err) {
+    //     console.log(req.file);
+    //     if (err instanceof helpers.file.multer.MulterError) {
+    //       // A Multer error occurred when uploading.
+    //         console.log('error 1', err);
+    //     } else if (err) {
+    //         console.log('error 2', err);
+    //       // An unknown error occurred when uploading.
+    //     }
 
-        console.log(req.body);
-        console.log('uploaded...');
-        // Everything went fine.
-    });
+    //     console.log(req.body);
+    //     console.log('uploaded...');
+    //     // Everything went fine.
+    // });
+
+    // const post = await Post.create({ 
+    //     public_date_at: '2022-07-09T12:50:58.009Z',
+    //     title: "test title",  
+    //     options: {
+    //         thumbnail: 'test thumb',
+    //         action: true
+    //     }
+    // });
+
+    // const post = await Post.findByPk(1);
+
+    // console.log(post.options.thumbnail);
+
+    db.HLEP.insertTagsOfPostId(1,['tag tes','myapp t','sdsdsd', 'tag test']);
 
     
     res.send({

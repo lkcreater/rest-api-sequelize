@@ -1,4 +1,10 @@
 module.exports = (sequelize, Sequelize, DataTypes) => {
+    const enumValue = {
+        post:   'POST', 
+        tag:    'TAG',
+        media:  'MEDIA'
+    };
+
     const Post = sequelize.define(
         "posts", // Model name
         {
@@ -10,7 +16,7 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
             },
             type: {
                 type: DataTypes.ENUM({
-                    values : ['POST', 'TAG', 'MEDIA']
+                    values : Object.values(enumValue)
                 }),
                 defaultValue: 'POST'
             },
@@ -32,6 +38,13 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
             },
             options: {
                 type: DataTypes.TEXT,
+                get(){
+                    const storedValue = this.getDataValue('options');
+                    return JSON.parse(storedValue);
+                },
+                set(value){
+                    this.setDataValue('options', JSON.stringify(value));
+                }
             },
             menu_order: {
                 type: DataTypes.INTEGER,
@@ -75,6 +88,8 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
             updatedAt: "updated_at"
         }
     );
+
+    Post.isType = enumValue;
 
     return Post;
 };
