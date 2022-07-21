@@ -35,6 +35,12 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
             },
             content: {
                 type: DataTypes.TEXT,
+                get(){
+                    return unescape(this.getDataValue('content'));
+                },
+                set(value){
+                    this.setDataValue('content', escape(value));
+                }
             },
             options: {
                 type: DataTypes.TEXT,
