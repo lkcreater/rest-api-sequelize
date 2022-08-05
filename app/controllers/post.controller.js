@@ -4,19 +4,22 @@ const helpers = require("../helpers");
 const Post = db.post;
 const Op = db.Op;
 
-
 //***********************************************************/
 // controller create 
 //***********************************************************/
 exports.create = async (req, res) => {      
-
+    // multer set array FormData
     const upload = helpers.file.upload.array('file');
-
+    // upload file
     upload(req, res, function (err) {
-        const files = req.files.map(element => {
-            return helpers.file.getFileData(element);
-        });
-        console.log(files);
+        //setup file upload
+        let files = [];
+        if(req.files){
+            files = req.files.map(element => {
+                return helpers.file.getFileData(element);
+            });
+        }        
+        // handle error
         if (err instanceof helpers.file.multer.MulterError) {
           // A Multer error occurred when uploading.
             console.log('error 1', err);
@@ -25,87 +28,111 @@ exports.create = async (req, res) => {
           // An unknown error occurred when uploading.
         }
 
-        console.log(req.body);
-        console.log('uploaded...');
-        // Everything went fine.
-    });
-
-    // const post = await Post.create({ 
-    //     public_date_at: '2022-07-09T12:50:58.009Z',
-    //     title: "test title",  
-    //     options: {
-    //         thumbnail: 'test thumb',
-    //         action: true
-    //     }
-    // });
-
-    // const post = await Post.findByPk(1);
-
-    // console.log(post.options.thumbnail);
-
-    //db.HLEP.insertTagsOfPostId(1,['tag tes','myapp t','sdsdsd', 'tag test']);
-
-    
-    res.send({
-        result: '6666'
-    });
-
-    //let input = req.body.title;
-    //console.log(req);
-    // res.send({
-    //     result: '555'
-    // });
-    // validate input
-    /*
-    const v = new Validator(req.body, {
-        title: 'required'
-    });
-
-    v.check().then((matched) => {
-        if (!matched) {
-            res.status(422).send({errors : v.errors});
-        }else{
-
-            const attributes = req.body;
-            //check input 'slug' require and convert to setSlug
-            if(!attributes.slug){
-                attributes.slug = helpers.text.setSlug(attributes.title);
+        // use Validator
+        const v = new Validator(req.body, {
+            title: 'required'
+        });    
+        // check validate
+        v.check().then( async (matched) => {
+            if (!matched) {
+                res.status(422).send({errors : v.errors});
             }else{
-                attributes.slug = helpers.text.setSlug(attributes.slug);
-            }
+                // set attrib
+                let attrib = req.body;
 
-            // insert to database
-            Post.create(attributes)
-                .then(data => {
-                    res.send({
-                        result: data
+                // set options                
+                attrib.options = {
+                    image: files
+                }                
+
+                attrib.slug = (!attrib.slug) ? helpers.text.setSlug(attrib.title) : helpers.text.setSlug(attrib.slug);
+
+                let result = null;
+                const insertPost = await Post.create(attrib);
+                if(insertPost){
+                    const cateIds = JSON.parse(attrib.selectCategory);
+                    if(cateIds){
+                        await db.HLEP.insertPostIdsToId(insertPost.id, cateIds)
+                    }
+
+                    const tagIds = JSON.parse(attrib.tags).map((val) => {
+                        return val.title;
                     });
-                })
-                .catch(err => {
-                    res.status(500).send({
-                        message: err.message || "Some error occurred while creating the item."
-                    });
+                    if(tagIds){
+                        await db.HLEP.insertTagsOfPostId(insertPost.id, tagIds)
+                    }
+
+                    result = await Post.getFullByPk(insertPost.id);
+                }
+                // console.log(files);
+                // console.log(req.body);
+                // console.log(insertPost);
+                // Everything went fine.
+
+                res.send({
+                    result: result
                 });
-        }
+            }
+        })
     });
-    */
+
 };
 
 //***********************************************************/
 // controller get find all
 //***********************************************************/
-exports.findAll = (req, res) => {
-    const condition = {};
-    
-    Post.findAll({ where: condition })
-    .then(data => {
-        res.send({
-            result: data
-        });
-    })
-    .catch(err => {
-        res.send(500).send({
-            message: err.message || "Some error accurred while retrieving item."
-        });
+exports.findOne = async (req, res) => {    
+    const data = await Post.getFullByPk(req.params.id);
+    res.send({
+        result: data
     });
+};
+
+//***********************************************************/
+// controller get find all
+//***********************************************************/
+exports.findAll = async (req, res) => {
+    let page = (req.query.page) ? req.query.page : 1;
+    const data = await Post.findModelAll(page);
+    
+    res.send({
+        result: data
+    });
+};
+
+//***********************************************************/
+// controller active find one
+//***********************************************************/
+exports.active = async (req, res) => {    
+    const { id } = req.params;
+    const { published } = req.body;
+
+    Post.update({ published : published }, { where: { id: id } })
+    .then((result) => {
+        res.send({
+            result: true
+        });
+    }).catch(err => {
+        res.status(500).send({
+            message: "Error active with id=" + id
+        });
+    });     
+};
+
+//***********************************************************/
+// controller delete find one
+//***********************************************************/
+exports.delete = async (req, res) => {    
+    const { id } = req.params;
+
+    Post.update({ published : Post.isPublished.delete }, { where: { id: id } })
+    .then((result) => {
+        res.send({
+            result: true
+        });
+    }).catch(err => {
+        res.status(500).send({
+            message: "Error delete with id=" + id
+        });
+    });     
 };

@@ -90,8 +90,9 @@ module.exports = (db, QueryTypes) => {
             }
 
             //insert postIds to {termRelationship}
-            help.insertPostIdsToId(postId, tagIds, 'post');
+            return await help.insertPostIdsToId(postId, tagIds, 'post');
         }
+        return false;
     };
     
 

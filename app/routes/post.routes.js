@@ -12,6 +12,15 @@ module.exports = app => {
     // Selete all category
     router.get("/", postController.findAll);
 
+    // Selete all category
+    router.get("/:id", postController.findOne);
+
+    // delete post by id
+    router.put("/active/:id", postController.active);
+
+     // delete post by id
+     router.delete("/:id", postController.delete);
+
     // Selete a category
     //router.get("/:id", postController.findOne);
   

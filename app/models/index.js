@@ -45,7 +45,7 @@ db.books = require("./book.model.js")(sequelize, Sequelize, DataTypes);
 db.user = require("./user.model.js")(sequelize, Sequelize, DataTypes);
 db.role = require("./role.model.js")(sequelize, Sequelize, DataTypes);
 db.category = require("./categorys.model.js")(sequelize, Sequelize, DataTypes);
-db.post = require("./post.model.js")(sequelize, Sequelize, DataTypes);
+db.post = require("./post.model.js")(sequelize, Sequelize, DataTypes, QueryTypes);
 db.termRelationship = require("./termRelationship.model.js")(sequelize, Sequelize, DataTypes);
 
 // setup helper
