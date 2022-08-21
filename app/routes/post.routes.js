@@ -2,12 +2,13 @@ module.exports = app => {
     const postController = require("../controllers/post.controller.js");  
     const config = require("../config/config.js");
     const router = require("express").Router();
+    const { checkReqPostByPk, uploadFile } = postController.middle;
   
     // Create a new category
-    router.post("/", postController.create);
+    router.post("/", [checkReqPostByPk, uploadFile], postController.create);
   
     // Update a category
-    //router.put("/:id", postController.update);
+    router.put("/:id", [checkReqPostByPk, uploadFile], postController.update);
 
     // Selete all category
     router.get("/", postController.findAll);
