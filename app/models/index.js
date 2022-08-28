@@ -53,17 +53,17 @@ db.HLEP = require("./render/model.helper.js")(db, QueryTypes);
 // setup option
 db.OPTION = require("./render/model.option.js")(db, QueryTypes);
 
-// join model
-db.role.belongsToMany(db.user, {
-  through: "user_roles",
-  foreignKey: "role_id",
-  otherKey: "user_id"
-});
-db.user.belongsToMany(db.role, {
-  through: "user_roles",
-  foreignKey: "user_id",
-  otherKey: "role_id"
-});
+// // join model
+// db.role.belongsToMany(db.user, {
+//   through: "user_roles",
+//   foreignKey: "role_id",
+//   otherKey: "user_id"
+// });
+// db.user.belongsToMany(db.role, {
+//   through: "user_roles",
+//   foreignKey: "user_id",
+//   otherKey: "role_id"
+// });
 
 db.ROLES = ["user", "admin", "moderator"];
 

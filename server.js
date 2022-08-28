@@ -30,11 +30,13 @@ app.get("/", (req, res) => {
 });
 
 // api routes
+const setupRoutes = ['book', 'auth', 'auth', 'user', 'category', 'post', 'role', 'media'];
 require("./app/routes/book.routes")(app);
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
 require("./app/routes/category.routes")(app);
 require("./app/routes/post.routes")(app);
+require("./app/routes/role.routes")(app);
 require("./app/routes/media.routes")(app);
 
 // set port, listen for requests
