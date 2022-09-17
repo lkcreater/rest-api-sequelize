@@ -1,19 +1,35 @@
-module.exports = app => {
-    const categoryController = require("../controllers/category.controller.js");  
-    const config = require("../config/config.js");
-    const router = require("express").Router();
-  
-    // Create a new category
-    router.post("/", categoryController.create);
-  
-    // Update a category
-    router.put("/:id", categoryController.update);
+const { NAME_SLUG_API } = require("../config/config");
+const { formValidateCategory } = require("../middlewares");
+const controller = require("../controllers/category.controller.js"); 
 
-    // Selete all category
-    router.get("/", categoryController.findAll);
+module.exports = function(app) {
 
-    // Selete a category
-    router.get("/:id", categoryController.findOne);
+    const BASE_URL = `/${NAME_SLUG_API}/category`;
+
+    app.use(function(req, res, next) {
+        res.header(
+            "Access-Control-Allow-Headers",
+            "x-access-token, Origin, Content-Type, Accept"
+        );
+
+        next();
+    });
+
+    // FIND ALL
+    app.get(`${BASE_URL}`, controller.findAll);
+
+    // FIND ALL LIST
+    app.get(`${BASE_URL}/list`, controller.findList);
+
+    // FIND PK
+    app.get(`${BASE_URL}/:id`, controller.findOne);
+       
+    // CREATE
+    app.post(`${BASE_URL}`, [formValidateCategory], controller.create);
   
-    app.use("/"+ config.base_host_api +"/category", router);
-  };
+    // UPDATE
+    app.put(`${BASE_URL}/:id`, [formValidateCategory], controller.update);   
+    
+    // DELETE
+    app.delete(`${BASE_URL}/:id`, controller.delete);  
+};

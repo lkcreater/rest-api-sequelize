@@ -22,6 +22,8 @@ module.exports = app => {
      // delete post by id
      router.delete("/:id", postController.delete);
 
+     
+
     // Selete a category
     //router.get("/:id", postController.findOne);
   

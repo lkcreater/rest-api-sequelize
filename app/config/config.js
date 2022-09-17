@@ -25,7 +25,8 @@ const configEnv = {
   },
 
   /** HOST API */
-  base_host_api: '' 
+  base_host_api: 'api',
+  NAME_SLUG_API: 'api',
 };
 
 /***** local *****/
@@ -57,7 +58,8 @@ const configLocal = {
   },
 
   /** HOST API */
-  base_host_api: 'api' 
+  base_host_api: 'api',
+  NAME_SLUG_API: 'api',
 };
 
 module.exports = configLocal;

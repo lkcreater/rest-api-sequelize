@@ -2,14 +2,11 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const config = require("./app/config/config.js");
-
 const app = express();
 
-const corsOptions = {
+app.use(cors({
   origin: "http://localhost:8080"
-};
-
-app.use(cors(corsOptions));
+}));
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
@@ -38,6 +35,7 @@ require("./app/routes/category.routes")(app);
 require("./app/routes/post.routes")(app);
 require("./app/routes/role.routes")(app);
 require("./app/routes/media.routes")(app);
+require("./app/routes/validate.routes")(app);
 
 // set port, listen for requests
 const PORT = config.PORT;

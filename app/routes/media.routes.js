@@ -1,24 +1,51 @@
-const { authJwt } = require("../middlewares");
-const $helper = require("../helpers");
+const { NAME_SLUG_API } = require("../config/config");
+const { Multer } = require("../plugins")
+const { uploadFileSingle, uploadMultiFile, readFileUpload } = require("../middlewares");
+const controller = require("../controllers/media.controller.js"); 
 
-module.exports = (app) => {
-    app.get("/" + $helper.file.nameUrlApi + "/:subPath/:mediaId", (req, res, next) => {
+const setFilterGallery = (req, res, next) => {
+    req.filterFiles = ['png', 'jpg', 'jpeg'];
+    next();
+};
 
-        const filename = req.params.mediaId;
-        const dirPath = $helper.file.getPath( req.params.subPath );
+const setFilterAttachment = (req, res, next) => {
+    req.filterFiles = ['doc', 'docx', 'xls', 'xlsx', 'pdf'];
+    next();
+};
 
-        if(!dirPath){
-            res.status(404).send('Not Found Directory!');
-        }
+const setFilterAll = (req, res, next) => {
+    req.filterFiles = ['doc', 'docx', 'xls', 'xlsx', 'pdf', 'png', 'jpg', 'jpeg'];
+    next();
+};
 
-        let options = {
-            root: dirPath
-        }
+module.exports = function(app) {
 
-        res.sendFile(filename, options, (err) => {
-            if (err) {
-                res.status(404).send('Not Found');
-            } 
-        });
+    const BASE_URL = `/${NAME_SLUG_API}/media`;
+
+    app.use(function(req, res, next) {
+        res.header(
+            "Access-Control-Allow-Headers",
+            "x-access-token, Origin, Content-Type, Accept"
+        );
+
+        next();
     });
-}
+
+    // READ FILE
+    app.get(`/${Multer.PATH_URL}/:path/:filename`, [readFileUpload], controller.read);
+
+    // UPLOAD FILE SINGLE
+    app.post(`${BASE_URL}/upload/file`, [setFilterAll, uploadFileSingle], controller.upload);
+
+    // UPLOAD FILE SINGLE IMAGE
+    app.post(`${BASE_URL}/upload/image`, [uploadFileSingle], controller.upload);
+
+    // UPLOAD FILE MULTIPLE
+    app.post(`${BASE_URL}/upload/multi-file`, [setFilterAll, uploadMultiFile], controller.multiUpload);
+
+    // UPLOAD FILE MULTIPLE GALLERY
+    app.post(`${BASE_URL}/upload/gallery`, [setFilterGallery, uploadMultiFile], controller.multiUpload);
+
+    // UPLOAD FILE MULTIPLE ATTACHMENT
+    app.post(`${BASE_URL}/upload/attachment`, [setFilterAttachment, uploadMultiFile], controller.multiUpload);
+};

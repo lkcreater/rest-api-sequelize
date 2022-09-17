@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize, DataTypes, QueryTypes) => {
+module.exports = (sequelize, Sequelize, DataTypes, QueryTypes, $pagination) => {
     const enumValue = {
         post:   'POST', 
         tag:    'TAG',
@@ -165,26 +165,17 @@ module.exports = (sequelize, Sequelize, DataTypes, QueryTypes) => {
     }
 
     Post.getFullByPk = async (id) => {
-        return await sequelize.query(Post.sql.selectFull + `AND p.id=` + id, { type: QueryTypes.SELECT });        
+        return await sequelize.query(Post.sql.selectFull + `AND p.id=:id`, { 
+            replacements: { id: id },
+            type: QueryTypes.SELECT 
+        });        
     }
 
     Post.findModelAll = async (page= 1, limit= 10) => {
-        const [{rows}] = await sequelize.query(Post.sql.countFull, { type: QueryTypes.SELECT });
-        const sql = Post.sql.selectFull + ` LIMIT ` + ((page - 1) * limit) + `, ` + limit;
-        const dataAll = await sequelize.query(sql, { type: QueryTypes.SELECT }); 
-        const num = dataAll.length;
-        const maxPage = Math.ceil(rows/limit);
-
-        return {
-            meta:{
-                maxRow: rows,
-                limit,
-                maxPage,
-                currentPage: page,
-                currentRow: num
-            },
-            record: dataAll
-        }
+        return $pagination(Post.sql.selectFull, {
+            page: page,
+            limit: limit
+        })
     }
 
     return Post;

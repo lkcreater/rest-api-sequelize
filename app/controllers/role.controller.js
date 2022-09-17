@@ -65,9 +65,6 @@ const run = () => {
                     is_admin: true
                 });
             }
-
-            console.log(model);
-
         }
     }
 }

@@ -1,4 +1,4 @@
-module.exports = (sequelize, Sequelize, DataTypes) => {
+module.exports = (sequelize, Sequelize, DataTypes, $pagination) => {
     const Categorys = sequelize.define(
         "categorys", // Model name
         {
@@ -45,9 +45,23 @@ module.exports = (sequelize, Sequelize, DataTypes) => {
         }
     );
 
-    Categorys.prototype.testMethod = function () {
-        console.log(this);
-      };
+    Categorys.queryAll = async (page= 1, limit= 10, search={}) => {
+        // set sql
+        let sql = `SELECT * FROM categorys WHERE published=1 `;
+
+        // set filter
+        const filter = {}
+        if(search.title){
+            sql = sql + ` AND title LIKE :title `;
+            filter.title = `%${search.title}%`;
+        }  
+
+        return $pagination(sql, {
+            page: page,
+            limit: limit,
+            search: filter
+        })
+    }
 
     return Categorys;
 };

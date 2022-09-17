@@ -19,7 +19,8 @@ fileManage.fullDirPath = () => {
 
 //-- generate name sub directory 
 fileManage.subDir = () => {
-    return moment().format('YYYY-MM');
+    const date = moment().format('YYYY-MM-DD');
+    return `TMP_${date}`;
 }
 
 //-- get name url
@@ -40,7 +41,9 @@ fileManage.getPath = (subDirName=null) => {
 
 //-- get file upload object
 fileManage.getFileData = (object) => {
+    //console.log(object);
     return {
+        originalname: object.originalname,
         filename: object.filename,
         encoding: object.encoding,
         mimetype: object.mimetype,
