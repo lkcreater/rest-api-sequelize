@@ -1,13 +1,11 @@
-const db = require("../models");
-const { Validator } = require('node-input-validator');
-const helpers = require("../helpers");
+const { Respone } = require("../plugins");
 
 //--------------------------------
 // -- UPLOAD SINGLE
 //--------------------------------
 exports.upload = (req, res) => {
     if(req.file){
-        res.send(req.file);
+        res.send(Respone(req.file));
     }else{
         return res.status(500).send({
             message: "Error file not found!"
@@ -20,7 +18,7 @@ exports.upload = (req, res) => {
 //--------------------------------
 exports.multiUpload = (req, res) => {
     if(req.files){
-        res.send(req.files);
+        res.send(Respone(req.files));
     }else{
         return res.status(500).send({
             message: "Error file not found!"

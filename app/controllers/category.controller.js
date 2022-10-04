@@ -1,7 +1,6 @@
 const db = require("../models");
-const helpers = require("../helpers");
+const { TextSlugFnc, Respone } = require("../plugins");
 const Category = db.category;
-const Op = db.Op;
 
 //--------------------------------
 // -- ACTION CREATE
@@ -9,17 +8,15 @@ const Op = db.Op;
 exports.create = (req, res) => {
     const attributes = req.body;
     if(!attributes.slug){
-        attributes.slug = helpers.text.setSlug(attributes.title);
+        attributes.slug = TextSlugFnc(attributes.title);
     }else{
-        attributes.slug = helpers.text.setSlug(attributes.slug);
+        attributes.slug = TextSlugFnc(attributes.slug);
     }
 
     // insert to database
     Category.create(attributes)
     .then(data => {
-        res.send({
-            result: data
-        });
+        res.send(Respone(data));
     })
     .catch(err => {
         res.status(500).send({
@@ -34,9 +31,9 @@ exports.create = (req, res) => {
 exports.update = (req, res) => {
     const attributes = req.body;
     if(!attributes.slug){
-        attributes.slug = helpers.text.setSlug(attributes.title);
+        attributes.slug = TextSlugFnc(attributes.title);
     }else{
-        attributes.slug = helpers.text.setSlug(attributes.slug);
+        attributes.slug = TextSlugFnc(attributes.slug);
     }
 
     // update to database
@@ -47,9 +44,7 @@ exports.update = (req, res) => {
     .then(num => {
         if (num == 1) {
             Category.findByPk(id).then((data) => {
-                res.send({
-                    result: data
-                });
+                res.send(Respone(data));
             });                    
         } else {
             res.send({
@@ -71,7 +66,7 @@ exports.update = (req, res) => {
 exports.findAll = async (req, res) => {
     try {
         const data = await Category.queryAll(req.query.page, 10, req.query)
-        res.send(data);
+        res.send(Respone(data));
     } catch (err) {
         res.send(500).send({
             message: err.message || "Some error accurred while retrieving item."
@@ -91,7 +86,7 @@ exports.findList = async (req, res) => {
             id: 0,
             title: '-- uncategorized --'
         })
-        res.send(data);
+        res.send(Respone(data));
     })
     .catch(err => {
         res.status(500).send({
@@ -108,9 +103,7 @@ exports.findOne = (req, res) => {
   
     Category.findByPk(id)
     .then(data => {
-        res.send({
-            result: data
-        });
+        res.send(Respone(data));
     })
     .catch(err => {
         res.status(500).send({
@@ -129,9 +122,9 @@ exports.delete = (req, res) => {
         where: { id: id }
     })
     .then(num => {        
-        res.send({
+        res.send(Respone({
             delete: true
-        });
+        }));
     })
     .catch(err => {
         res.status(500).send({

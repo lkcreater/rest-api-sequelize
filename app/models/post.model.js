@@ -1,15 +1,12 @@
+const _ = require('lodash');
+const { TextRemoveTagHtml } = require('../plugins');
+
 module.exports = (sequelize, Sequelize, DataTypes, QueryTypes, $pagination) => {
     const enumValue = {
         post:   'POST', 
         tag:    'TAG',
         media:  'MEDIA'
-    };
-
-    const typePublic = {
-        deactive: 0,
-        active: 1,
-        delete: 99
-    }
+    };    
 
     const Post = sequelize.define(
         "posts", // Model name
@@ -104,78 +101,77 @@ module.exports = (sequelize, Sequelize, DataTypes, QueryTypes, $pagination) => {
         }
     );
 
-    Post.isType = enumValue;
+    const compareDataExport = (model) => {
+        model.content = unescape(model.content);
+        model.content_excerpt = (model.content_excerpt != '') ? model.content_excerpt : TextRemoveTagHtml(model.content);
+        return model;        
+    }
 
-    Post.isPublished = typePublic;
-
-    Post.sql = {
-        selectFull: `SELECT
-                p.*,
-                JSON_EXTRACT(p.options, '$') AS options,
-                (   SELECT JSON_ARRAYAGG(JSON_OBJECT( 'cate_id', c.id, 'cate_title', c.title)) 
-                    FROM categorys c 
-                    LEFT JOIN term_relationships tr 
-                    ON c.id = tr.term_id 
-                    WHERE tr.term_type='CATEGORY' AND tr.post_id=p.id AND c.published=1
-                ) AS  categorys,
-                (   SELECT JSON_ARRAYAGG(JSON_OBJECT( 'tag_id', t.id , 'tag_title', t.title, 'tag_url', CONCAT('api/tag/', t.id))) 
-                    FROM posts t 
-                    LEFT JOIN term_relationships tr2 
-                    ON t.id = tr2.term_id 
-                    WHERE tr2.term_type ='POST' AND tr2.post_id=p.id AND t.published=1
-                ) AS  tags
-            FROM posts p 
-            WHERE p.type='POST' AND p.published IN(0, 1) `,
-
-        select: `SELECT`,
-
-        selector: [
-            `p.*`,
-            `JSON_EXTRACT(p.options, '$') AS options`,
-            `( SELECT JSON_ARRAYAGG(JSON_OBJECT( 'cate_id', c.id, 'cate_title', c.title)) 
+    const SQL_CODE_TEXT = `
+        SELECT
+            p.*,
+            JSON_EXTRACT(p.options, '$') AS options,
+            (   SELECT JSON_ARRAYAGG(JSON_OBJECT( 'cate_id', c.id, 'cate_title', c.title)) 
                 FROM categorys c 
                 LEFT JOIN term_relationships tr 
                 ON c.id = tr.term_id 
                 WHERE tr.term_type='CATEGORY' AND tr.post_id=p.id AND c.published=1
-            ) AS categorys`,
-            `( SELECT JSON_ARRAYAGG(JSON_OBJECT( 'tag_id', t.id , 'tag_title', t.title, 'tag_url', CONCAT('api/tag/', t.id))) 
+            ) AS  categorys,
+            (   SELECT JSON_ARRAYAGG(JSON_OBJECT( 'tag_id', t.id , 'tag_title', t.title, 'tag_url', CONCAT('api/tag/', t.id))) 
                 FROM posts t 
                 LEFT JOIN term_relationships tr2 
                 ON t.id = tr2.term_id 
                 WHERE tr2.term_type ='POST' AND tr2.post_id=p.id AND t.published=1
-            ) AS tags`
-        ],
+            ) AS  tags
+        FROM posts p 
+        WHERE p.type='POST' AND p.published IN(0, 1) 
+    `;
 
-        form: [
-            `FROM posts p`
-        ],
+    Post.isType = enumValue;
 
-        where: [
-            `WHERE p.type='POST'`,            
-        ],
+    Post.isPublished = {
+        deactive: 0,
+        active: 1,
+        delete: 99
+    };
 
-        convertSql: () => {
-            const { select, selector, form, where } = Post.sql;
-            const sql = `${select} ${selector.join(', ')} ${form} ${where}`
-            console.log(sql);
-        },
-
-        countFull: `SELECT COUNT(*) AS rows FROM posts WHERE type='POST' AND published=1`,
-
+    //-- QUERY ONE 
+    Post.queryByPk = async (id) => {
+        return await Post.findOne({ 
+            where: { 
+                id: id,
+                type: Post.isType.post,
+                published: Post.isPublished.active,
+            } 
+        });         
     }
 
-    Post.getFullByPk = async (id) => {
-        return await sequelize.query(Post.sql.selectFull + `AND p.id=:id`, { 
+    //-- QUERY ONE FULL
+    Post.queryFullByPk = async (id) => {
+        const data =  await sequelize.query( `${SQL_CODE_TEXT} AND p.id=:id LIMIT 1`, { 
             replacements: { id: id },
             type: QueryTypes.SELECT 
-        });        
+        });     
+        
+        if(data.length > 0){
+            return compareDataExport(data[0]);
+        }
+        return null;
     }
 
-    Post.findModelAll = async (page= 1, limit= 10) => {
-        return $pagination(Post.sql.selectFull, {
+    Post.queryFullList = async (page= 1, limit= 10) => {
+        const models = await $pagination(SQL_CODE_TEXT, {
             page: page,
             limit: limit
         })
+
+        if(models){
+            models.record = _.map(models.record, (item) => {
+                return compareDataExport(item);
+            });
+        }
+
+        return models;
     }
 
     return Post;

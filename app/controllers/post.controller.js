@@ -1,175 +1,142 @@
 const db = require("../models");
-const { Validator } = require('node-input-validator');
-const helpers = require("../helpers");
+const { TextSlugFnc, Respone } = require("../plugins");
+const TernRelat = db.termRelationship;
 const Post = db.post;
 const Op = db.Op;
 
-//***********************************************************/
-// เช็ค middle เพื่อหา post by pk ว่ามีอยู่จริงไหม 
-//***********************************************************/
-exports.middle = {
-    // check req post by pk
-    checkReqPostByPk: async (req, res, next) => {
-        const post = (req.params.id) ? await Post.getFullByPk(req.params.id) : [];
-        if(post.length > 0){
-            req.isUpdate = {
-                status : true,
-                items: post[0]
-            };        
-        }else{
-            req.isUpdate = {
-                status : false,
-                items: null
-            };  
+//--------------------------------
+// -- SETUP ATTRIBUTES
+//--------------------------------
+const setupAttributes = (params) => {
+    const attributes = {
+        title: params.title,
+        slug: params.slug,
+        public_date_at: params.public_date_at,
+        content: params.content,
+        content_excerpt: params.content_excerpt
+    }
+
+    //-- SET SLUG
+    if(!attributes.slug){
+        attributes.slug = TextSlugFnc(attributes.title);
+    }else{
+        attributes.slug = TextSlugFnc(attributes.slug);
+    }
+
+    //-- SET OPTIONS
+    attributes.options = {
+        image: params.image,
+        gallery: params.gallery,
+        files: params.files
+    }
+
+    return attributes;
+}
+
+//--------------------------------
+// -- SETUP RELATEION TO POST
+//--------------------------------
+const setupRelatPost = async (postId, body) => {    
+    try {    
+        if(body.categorys.length > 0){
+            await TernRelat.relatCategorie(postId, body.categorys);
         }
-        next();
-    },
 
-    // handle upload file
-    uploadFile: (req, res, next) => {
-        const fnUploadMiddle = helpers.file.upload.array('file');
-
-        fnUploadMiddle(req, res, (err) => {
-            // handle error
-            if (err instanceof helpers.file.multer.MulterError) {
-            // A Multer error occurred when uploading.
-                console.log('error 1', err);
-            } else if (err) {
-                console.log('error 2', err);
-            // An unknown error occurred when uploading.
-            }
-
-            let files = [];
-            if(req.files){
-                files = req.files.map(element => {
-                    return helpers.file.getFileData(element);
-                });
-            }
-            req.files = files;
-            next();
-        })
-    }
-}
-
-const fnSetupCateAndTags = async (postId, attrib) => {
-    // setup categories
-    const cateIds = JSON.parse(attrib.selectCategory);
-    if(cateIds){
-        await db.HLEP.insertPostIdsToId(postId, cateIds)
-    }
-
-    // setup tags
-    const tagIds = JSON.parse(attrib.tags).map((val) => {
-        return val.title;
-    });
-    if(tagIds){
-        await db.HLEP.insertTagsOfPostId(postId, tagIds)
-    }
-
-    // return respone
-    return await Post.getFullByPk(postId);
-}
-
-const fnPostAction = (req, res) => {
-    const { status, items } = req.isUpdate;
-    let attrib = req.body;
-    let result = null;        
-
-    const v = new Validator(req.body, {
-        title: 'required'
-    });
-
-    v.check().then( async (matched) => {
-        if (!matched) {
-            res.status(422).send({errors : v.errors});
-        }else{ 
-            attrib.slug = (!attrib.slug) ? helpers.text.setSlug(attrib.title) : helpers.text.setSlug(attrib.slug);
-
-            // is new record ** action create 
-            if(status === false){
-                attrib.options = {
-                    image: req.files
-                } 
-
-                const insertPost = await Post.create(attrib);
-                if(insertPost){                    
-                    result = await fnSetupCateAndTags(insertPost.id, attrib);
-                }
-            }
-
-            // is update record ** action update
-            if(status === true){
-                if(req.files.length > 0){
-                    if(attrib.options && attrib.options.image) {
-                        attrib.options.image = req.files
-                    } else{
-                        attrib.options = {
-                            image: req.files
-                        } 
-                    }
-                }
-                
-                const updatePost = await Post.update(attrib, {
-                    where: {id: items.id}
-                });
-                
-                if(updatePost.length > 0){                    
-                    result = await fnSetupCateAndTags(items.id, attrib);
-                }
-            }            
-
-            // return result
-            res.send({
-                result: result
-            });
+        if(body.tags.length > 0){
+            await TernRelat.relatTags(postId, body.tags);
         }
-    });
-}
 
-//***********************************************************/
-// controller create 
-//***********************************************************/
-exports.create = fnPostAction;
+        return await Post.queryFullByPk(postId);
+    } catch (error) {
+        throw `Error function{setupRelatPost} : ${error}`;   
+    }
+} 
 
-//***********************************************************/
-// controller update 
-//***********************************************************/
-exports.update = fnPostAction;
+//--------------------------------
+// -- ACTION CREATE
+//--------------------------------
+exports.create = (req, res) => {
+    const attributes = setupAttributes(req.body);
 
-//***********************************************************/
-// controller get find all
-//***********************************************************/
-exports.findOne = async (req, res) => {    
-    const data = await Post.getFullByPk(req.params.id);
-    res.send({
-        result: data
-    });
-};
-
-//***********************************************************/
-// controller get find all
-//***********************************************************/
-exports.findAll = async (req, res) => {
-    let page = (req.query.page) ? req.query.page : 1;
-    const data = await Post.findModelAll(page);
-    
-    res.send({
-        result: data
-    });
-};
-
-//***********************************************************/
-// controller active find one
-//***********************************************************/
-exports.active = async (req, res) => {    
-    const { id } = req.params;
-    const { published } = req.body;
-
-    Post.update({ published : published }, { where: { id: id } })
-    .then((result) => {
-        res.send({
-            result: true
+    // insert to database
+    Post.create(attributes)
+    .then( async item => {
+        try {
+            const respone = await setupRelatPost(item.id, req.body);
+            res.send(Respone(respone));
+        } catch (error) {
+            console.log(error);
+        }        
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || "Some error occurred while creating the item."
         });
+    });
+};
+
+//--------------------------------
+// -- ACTION UPDATE
+//--------------------------------
+exports.update = (req, res) => {
+    const attributes = setupAttributes(req.body);
+
+    // update to database
+    Post.update(attributes, {
+        where: { id: req.model.id }
+    })
+    .then( async item => {
+        try {
+            const respone = await setupRelatPost(req.model.id, req.body);
+            res.send(Respone(respone));
+        } catch (error) {
+            console.log(error);
+        }       
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || "Some error occurred while creating the item."
+        });
+    });
+};
+
+//--------------------------------
+// -- ACTION FIND LIST
+//--------------------------------
+exports.findList = async (req, res) => {
+    const data = await Post.queryFullList()
+    if(data){
+        res.send(Respone(data));
+    }else{
+        res.status(404).send({
+            message: "Data not found"
+        });
+    }
+};
+
+//--------------------------------
+// -- ACTION FIND PK FULL
+//--------------------------------
+exports.oneFull = async (req, res) => {
+    const data = await Post.queryFullByPk(req.params.id)
+    if(data){
+        res.send(Respone(data));
+    }else{
+        res.status(404).send({
+            message: "Data not found"
+        });
+    }
+};
+
+//--------------------------------
+// -- ACTION ACTIVE 
+//--------------------------------
+exports.active = async (req, res) => {    
+    Post.update({ published : req.body.published }, { where: { id: req.model.id } })
+    .then((result) => {
+        res.send(Respone({
+            result: true
+        }));
     }).catch(err => {
         res.status(500).send({
             message: "Error active with id=" + id
@@ -177,20 +144,28 @@ exports.active = async (req, res) => {
     });     
 };
 
-//***********************************************************/
-// controller delete find one
-//***********************************************************/
+//--------------------------------
+// -- ACTION DELETE
+//--------------------------------
 exports.delete = async (req, res) => {    
-    const { id } = req.params;
-
-    Post.update({ published : Post.isPublished.delete }, { where: { id: id } })
+    Post.update({ published : Post.isPublished.delete }, { where: { id: req.model.id } })
     .then((result) => {
-        res.send({
+        res.send(Respone({
             result: true
-        });
+        }));
     }).catch(err => {
         res.status(500).send({
             message: "Error delete with id=" + id
         });
     });     
 };
+
+
+exports.test = async (req, res) => {
+    const data = await TernRelat.relatTags(1, [
+        '11111',
+        '22222',
+        '33333'
+    ]);
+    res.send(data);
+}

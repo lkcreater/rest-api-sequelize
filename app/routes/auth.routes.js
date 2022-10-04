@@ -1,10 +1,8 @@
 const { NAME_SLUG_API } = require("../config/config");
-const { verifyUsernameOrEmail, formValidateUserRegister } = require("../middlewares");
+const { verifyUsernameOrEmail, formValidateUserRegister, formValidateLogin, vertifyTokenJwt} = require("../middlewares");
 const controller = require("../controllers/auth.controller");
 
-module.exports = function(app) {
-
-    const BASE_URL = `/${NAME_SLUG_API}/auth`;
+module.exports = function(app) {    
 
     app.use(function(req, res, next) {
         res.header(
@@ -15,9 +13,11 @@ module.exports = function(app) {
         next();
     });
 
-    app.post(`${BASE_URL}/register`, [verifyUsernameOrEmail, formValidateUserRegister], controller.register);
+    const BASE_URL = `/${NAME_SLUG_API}/auth`;
 
-    app.post(`${BASE_URL}/signin`, controller.signin);
+    app.post(`${BASE_URL}/signup`, [vertifyTokenJwt, verifyUsernameOrEmail, formValidateUserRegister], controller.register);
 
-    app.post(`${BASE_URL}/test`, [verifyUsernameOrEmail], controller.test);
+    app.post(`${BASE_URL}/signin`, [formValidateLogin], controller.signin);
+
+    app.post(`${BASE_URL}/sync`, [vertifyTokenJwt], controller.syncToken);
 };

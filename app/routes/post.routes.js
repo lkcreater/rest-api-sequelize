@@ -1,31 +1,35 @@
-module.exports = app => {
-    const postController = require("../controllers/post.controller.js");  
-    const config = require("../config/config.js");
-    const router = require("express").Router();
-    const { checkReqPostByPk, uploadFile } = postController.middle;
-  
-    // Create a new category
-    router.post("/", [checkReqPostByPk, uploadFile], postController.create);
-  
-    // Update a category
-    router.put("/:id", [checkReqPostByPk, uploadFile], postController.update);
+const { NAME_SLUG_API } = require("../config/config");
+const { verifyPostByPk, formValidatePost, formValidatePostActive, vertifyTokenJwt } = require("../middlewares");
+const controller = require("../controllers/post.controller.js"); 
 
-    // Selete all category
-    router.get("/", postController.findAll);
+module.exports = function(app) { 
 
-    // Selete all category
-    router.get("/:id", postController.findOne);
+    app.use(function(req, res, next) {
+        res.header(
+            "Access-Control-Allow-Headers",
+            "x-access-token, Origin, Content-Type, Accept"
+        );
 
-    // delete post by id
-    router.put("/active/:id", postController.active);
+        next();
+    });
 
-     // delete post by id
-     router.delete("/:id", postController.delete);
+    const BASE_URL = `/${NAME_SLUG_API}/post`;
 
-     
+    // FIND LIST
+    app.get(`${BASE_URL}`, [vertifyTokenJwt], controller.findList);
 
-    // Selete a category
-    //router.get("/:id", postController.findOne);
-  
-    app.use("/"+ config.base_host_api +"/post", router);
-  };
+    // FIND PK FULL
+    app.get(`${BASE_URL}/:id`, [vertifyTokenJwt], controller.oneFull);    
+
+    // CREATE
+    app.post(`${BASE_URL}`, [vertifyTokenJwt, formValidatePost], controller.create);
+
+    // UPDATE ACTIVE
+    app.put(`${BASE_URL}/active/:id`, [vertifyTokenJwt, verifyPostByPk, formValidatePostActive], controller.active);
+
+    // UPDATE
+    app.put(`${BASE_URL}/:id`, [vertifyTokenJwt, verifyPostByPk, formValidatePost], controller.update);   
+
+    // DELETE
+    app.delete(`${BASE_URL}/:id`, [vertifyTokenJwt, verifyPostByPk], controller.delete);  
+}

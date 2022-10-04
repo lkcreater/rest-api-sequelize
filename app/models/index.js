@@ -1,10 +1,11 @@
 const { Sequelize, DataTypes, Op, QueryTypes } = require("sequelize");
+const { Pagination } = require('../plugins')
 
 // connect database
-const sequelize = require('./connect.db.models')(Sequelize);
+const sequelize = require('./connection')(Sequelize);
 
 // load component model
-const { $pagination } = require('./component.models/model')(sequelize, Sequelize, DataTypes, QueryTypes);
+const $pagination = Pagination(sequelize, QueryTypes);
 
 // setup constrant db
 const db = {
@@ -21,11 +22,9 @@ db.role = require("./role.model.js")(sequelize, Sequelize, DataTypes);
 db.category = require("./categorys.model.js")(sequelize, Sequelize, DataTypes, $pagination);
 db.post = require("./post.model.js")(sequelize, Sequelize, DataTypes, QueryTypes, $pagination);
 db.userRole = require("./userRole.model.js")(sequelize, Sequelize, DataTypes, QueryTypes);
-db.termRelationship = require("./termRelationship.model.js")(sequelize, Sequelize, DataTypes);
+db.termRelationship = require("./termRelationship.model.js")(db.post, Op, sequelize, Sequelize, DataTypes, QueryTypes, $pagination);
 db.profile = require("./profile.model.js")(sequelize, Sequelize, DataTypes);
-
-// setup helper
-db.HLEP = require("./helper.models/model.helper.js")(db, QueryTypes);
+db.tag = require("./tag.model.js")(db.post, sequelize, DataTypes, QueryTypes, $pagination);
 
 db.ROLES = ["user", "admin", "moderator"];
 

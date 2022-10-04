@@ -1,5 +1,4 @@
-const config = require("../config/config");
-const jwt = require("jsonwebtoken");
+const { Respone, JwtToken } = require("../plugins");
 const bcrypt = require("bcryptjs");
 const db = require("../models");
 const User = db.user;
@@ -26,19 +25,17 @@ exports.register = async (req, res) => {
             phone: req.body.phone,
             birthday: req.body.birthday,
             sex: req.body.sex,
-        }).then(async profile => {
+        }).then( profile => {
 
-                const assignUserRole = await userRole.assignRole(user.id, req.body.role);
-                res.send({ 
-                    result: await User.one(user.id)
-                });
+            userRole.assignRole(user.id, req.body.role).then( async UserRoleModel => {
+                const userModel = await User.queryByPk(user.id);
+                res.send(Respone(userModel));
+            });
         })
         .catch(async err => {
 
             //-- destroy data users
-            await User.destroy({where: { id: user.id }});
-            await Profile.destroy({where: { user_id: user.id }});
-            await userRole.destroy({where: { user_id: user.id }});
+            await User.queryDelAllByPk(user.id);
 
             res.status(500).send({ message: 'PROFILE : ' + err.message });
         });
@@ -51,12 +48,7 @@ exports.register = async (req, res) => {
 // -- ACTION SIGN-IN
 //--------------------------------
 exports.signin = (req, res) => {
-    User.findOne({
-        where: {
-        username: req.body.username
-        }
-    })
-    .then( async user => {
+    User.queryByUsername(req.body.username).then( async user => {        
         if (!user) {
             return res.status(404).send({ message: "User Not found." });
         }
@@ -73,14 +65,13 @@ exports.signin = (req, res) => {
             });
         }
 
-        let token = jwt.sign({ id: user.id }, config.auth.secret, {
-            expiresIn: 86400 // 24 hours
-        });
+        let token = JwtToken(user.id);
 
-        const model = await User.one(user.id);     
+        const model = await User.queryByPk(user.id);    
         if(model){
-            model.token = token;
-            res.status(200).send(model);
+            await User.setLastToken(user.id, token);
+            model.accessToken = token;
+            res.status(200).send(Respone(model));
         }else{
             return res.status(500).send({ message: "User is NULL of database." });
         }
@@ -90,9 +81,20 @@ exports.signin = (req, res) => {
     });
 };
 
+//--------------------------------
+// -- ACTION SYNC TOKEN
+//--------------------------------
+exports.syncToken = async (req, res) => {
+    let token = JwtToken(req.userId);
+
+    res.status(200).send(Respone({
+        accessToken: token
+    }));
+}
+
 
 exports.test = async (req, res) => {
-    res.send({ message: await User.one(req.body.id) });
+    res.send({ message: 'OKkkkkkkk' });
 };
 
 exports.signup = (req, res) => {

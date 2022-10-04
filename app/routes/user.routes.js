@@ -1,7 +1,11 @@
-const { authJwt } = require("../middlewares");
+const { NAME_SLUG_API } = require("../config/config");
+const { verifyUsernameOrEmail, formValidateUserRegister, validateFindUserOrEmail, vertifyTokenJwt } = require("../middlewares");
 const controller = require("../controllers/user.controller");
 
+
+
 module.exports = function(app) {
+
     app.use(function(req, res, next) {
         res.header(
             "Access-Control-Allow-Headers",
@@ -10,11 +14,19 @@ module.exports = function(app) {
         next();
     });
 
-    app.get("/api/user/all", controller.findAll);
+    //app.use(vertifyTokenJwt);
 
-    app.get("/api/test/user", [authJwt.verifyToken], controller.userBoard);
+    const BASE_URL = `/${NAME_SLUG_API}/users`;
 
-    app.get("/api/test/mod", [authJwt.verifyToken, authJwt.isModerator], controller.moderatorBoard);
+    // FIND ALL
+    app.get(`${BASE_URL}`, [vertifyTokenJwt], controller.findAll);
 
-    app.get("/api/test/admin", [authJwt.verifyToken, authJwt.isAdmin], controller.adminBoard );
+    // FIND USER OR EMAIL
+    app.get(`${BASE_URL}/me`, [vertifyTokenJwt], controller.findMe);
+
+    // FIND USER OR EMAIL
+    app.post(`${BASE_URL}/user-email`, [vertifyTokenJwt, validateFindUserOrEmail], controller.findUserOrEmail);
+
+    // CREATE USER
+    app.post(`${BASE_URL}`, [vertifyTokenJwt, verifyUsernameOrEmail, formValidateUserRegister], controller.create);
 };

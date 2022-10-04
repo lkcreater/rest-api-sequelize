@@ -1,6 +1,6 @@
 const { NAME_SLUG_API } = require("../config/config");
 const { Multer } = require("../plugins")
-const { uploadFileSingle, uploadMultiFile, readFileUpload } = require("../middlewares");
+const { uploadFileSingle, uploadMultiFile, readFileUpload, vertifyTokenJwt } = require("../middlewares");
 const controller = require("../controllers/media.controller.js"); 
 
 const setFilterGallery = (req, res, next) => {
@@ -35,17 +35,17 @@ module.exports = function(app) {
     app.get(`/${Multer.PATH_URL}/:path/:filename`, [readFileUpload], controller.read);
 
     // UPLOAD FILE SINGLE
-    app.post(`${BASE_URL}/upload/file`, [setFilterAll, uploadFileSingle], controller.upload);
+    app.post(`${BASE_URL}/upload/file`, [vertifyTokenJwt, setFilterAll, uploadFileSingle], controller.upload);
 
     // UPLOAD FILE SINGLE IMAGE
-    app.post(`${BASE_URL}/upload/image`, [uploadFileSingle], controller.upload);
+    app.post(`${BASE_URL}/upload/image`, [vertifyTokenJwt, uploadFileSingle], controller.upload);
 
     // UPLOAD FILE MULTIPLE
-    app.post(`${BASE_URL}/upload/multi-file`, [setFilterAll, uploadMultiFile], controller.multiUpload);
+    app.post(`${BASE_URL}/upload/multi-file`, [vertifyTokenJwt, setFilterAll, uploadMultiFile], controller.multiUpload);
 
     // UPLOAD FILE MULTIPLE GALLERY
-    app.post(`${BASE_URL}/upload/gallery`, [setFilterGallery, uploadMultiFile], controller.multiUpload);
+    app.post(`${BASE_URL}/upload/gallery`, [vertifyTokenJwt, setFilterGallery, uploadMultiFile], controller.multiUpload);
 
     // UPLOAD FILE MULTIPLE ATTACHMENT
-    app.post(`${BASE_URL}/upload/attachment`, [setFilterAttachment, uploadMultiFile], controller.multiUpload);
+    app.post(`${BASE_URL}/upload/attachment`, [vertifyTokenJwt, setFilterAttachment, uploadMultiFile], controller.multiUpload);
 };

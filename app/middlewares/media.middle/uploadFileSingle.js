@@ -1,10 +1,10 @@
-const { Multer } = require("../plugins")
+const { Multer } = require("../../plugins")
 
 module.exports = (req, res, next) => {
     // setup filter type file
     const filterFile = (req.filterFiles) ? req.filterFiles : ['png', 'jpg', 'jpeg'];
     // func upload
-    const uploads = Multer.$upload(filterFile).array('file');
+    const uploads = Multer.$upload(filterFile).single('file');
 
     uploads(req, res, async (err) => {
         // handle error
@@ -18,7 +18,7 @@ module.exports = (req, res, next) => {
             });        
         }
         
-        req.files = req.files.map(file => Multer.convertFile(file));
+        req.file = Multer.convertFile(req.file);
         next();
     })
 }

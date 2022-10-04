@@ -1,30 +1,68 @@
+const { Respone, JwtToken } = require("../plugins");
+const { register } = require("./auth.controller");
 const db = require("../models");
-const { Validator } = require('node-input-validator');
-const helpers = require("../helpers");
 const User = db.user;
-const Op = db.Op;
 
 //--------------------------------
-// -- ACTION
+// -- ACTION FIND ME
 //--------------------------------
-exports.findAll = (req, res) => {
-    User.listAll().then(items => {
-        res.send({
-            result: items
-        });
+exports.findMe = async (req, res) => {
+    let token = JwtToken(req.userId);
+
+    const model = await User.queryByPk(req.userId);    
+    if(model){
+        await User.setLastToken(req.userId, token);
+        model.accessToken = token;
+        res.send(Respone(model));
+    }else{
+        res.status(500).send({ message: "User is NULL of database." });
+    }
+};
+
+//--------------------------------
+// -- ACTION FIND USER OR EMAIL
+//--------------------------------
+exports.findUserOrEmail = (req, res) => {
+    const object = {};
+    object[req.body.field.toLowerCase()] = req.body.value;
+
+    User.queryUsernameOrEmail(object)
+    .then( model => {
+        const respon = (model) ? {
+            isHas : true,
+            message: `${req.body.field} already exists`
+        } : {
+            isHas : false,
+            message: `${req.body.field} can be used`
+        }
+        
+        res.send(Respone(respon));
     })
     .catch(err => {
         res.status(500).send({ message: err.message });
     });    
 };
 
-exports.allAccess = (req, res) => {
-    res.status(200).send("Public Content.");
+
+//--------------------------------
+// -- ACTION
+//--------------------------------
+exports.findAll = (req, res) => {
+    User.queryFullList().then(items => {
+        res.send(Respone(items));
+    })
+    .catch(err => {
+        res.status(500).send({ message: err.message });
+    });    
 };
 
-exports.userBoard = (req, res) => {
-    res.status(200).send("User Content.");
-};
+
+//--------------------------------
+// -- ACTION CREATE USER
+//--------------------------------
+exports.create = register;
+
+
 
 exports.adminBoard = (req, res) => {
     res.status(200).send("Admin Content.");
