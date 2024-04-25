@@ -9,6 +9,7 @@ const $pagination = Pagination(sequelize, QueryTypes);
 
 // setup constrant db
 const db = {
+    DataTypes,
     $helper: require("../helpers"),
     Sequelize: Sequelize,
     Op: Op,

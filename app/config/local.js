@@ -1,6 +1,6 @@
 const configLocal = {
     NODE_ENV: 'development',
-    PORT: '3000',
+    PORT: '8080',
     
     db: {
         DB_HOST: 'localhost',
